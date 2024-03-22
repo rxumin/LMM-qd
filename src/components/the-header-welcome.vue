@@ -25,8 +25,8 @@
         </router-link>
       </a-menu-item>
 
-      <a-menu-item key="/about">
-        <router-link to="/about">
+      <a-menu-item key="/fxgj">
+        <router-link to="/fxgj">
           <ForkOutlined /> &nbsp; 分析工具
         </router-link>
       </a-menu-item>

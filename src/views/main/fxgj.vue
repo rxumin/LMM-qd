@@ -2,7 +2,17 @@
   <p>
     <a-space>
       <a-button type="primary" @click="handleQuery()">刷新</a-button>
-      <a-button type="primary" @click="onAdd">新增</a-button>
+      <a-button type="primary" @click="onAdd">按条件查询</a-button>
+<!--      <div class="div1">-->
+<!--        <p>可供查询的条件：</p>-->
+<!--      </div>-->
+      <div>
+        <a-tag color="orange" class="div2">MHC</a-tag>
+        <a-tag color="red" class="div2">Peptide</a-tag>
+        <a-tag color="blue" class="div2">mutation</a-tag>
+        <a-tag color="purple" class="div2">gene</a-tag>
+        <a-tag color="cyan" class="div2">confidence</a-tag>
+      </div>
     </a-space>
   </p>
   <a-table :dataSource="stations"
@@ -24,17 +34,23 @@
       </template>
     </template>
   </a-table>
-  <a-modal v-model:visible="visible" title="车站" @ok="handleOk"
+  <a-modal v-model:visible="visible" title="选取条件查询（不需要查询的为空）" @ok="handleOk"
            ok-text="确认" cancel-text="取消">
     <a-form :model="station" :label-col="{span: 4}" :wrapper-col="{ span: 20 }">
       <a-form-item label="MHC">
-        <a-input v-model:value="station.MHC" />
+        <a-input v-model:value="station.mhc" />
       </a-form-item>
-      <a-form-item label="站名拼音">
-        <a-input v-model:value="station.namePinyin" disabled/>
+      <a-form-item label="Peptide">
+        <a-input v-model:value="station.peptide"/>
       </a-form-item>
-      <a-form-item label="拼音首字母">
-        <a-input v-model:value="station.namePy" disabled/>
+      <a-form-item label="Mutation">
+        <a-input v-model:value="station.mutation"/>
+      </a-form-item>
+      <a-form-item label="Gene">
+        <a-input v-model:value="station.gene"/>
+      </a-form-item>
+      <a-form-item label="Confidence">
+        <a-input v-model:value="station.confidence"/>
       </a-form-item>
     </a-form>
   </a-modal>
@@ -50,12 +66,19 @@ export default defineComponent({
   setup() {
     const visible = ref(false);
     let station = ref({
-      id: undefined,
-      name: undefined,
-      namePinyin: undefined,
-      namePy: undefined,
-      createTime: undefined,
-      updateTime: undefined,
+      mhc: undefined,
+      peptide: undefined,
+      mutation: undefined,
+      gene: undefined,
+      confidence: undefined,
+      page: undefined,
+      size: undefined
+      // id: undefined,
+      // name: undefined,
+      // namePinyin: undefined,
+      // namePy: undefined,
+      // createTime: undefined,
+      // updateTime: undefined,
     });
     const stations = ref([]);
     // 分页的三个属性名是固定的
@@ -66,6 +89,11 @@ export default defineComponent({
     });
     let loading = ref(false);
     const columns = [
+      {
+        title: 'Cancer',
+        dataIndex: 'cancer',
+        key: 'Cancer',
+      },
     {
       title: 'MHC',
       dataIndex: 'mhc',
@@ -195,17 +223,7 @@ export default defineComponent({
         title: 'blast_length',
         dataIndex: 'blastLength',
         key: 'blast_length',
-      },
-      {
-        title: 'Cancer',
-        dataIndex: 'cancer',
-        key: 'Cancer',
       }
-
-
-
-
-
 
     ];
 
@@ -246,20 +264,43 @@ export default defineComponent({
     };
 
     const handleOk = () => {
-      axios.post("/business/admin/station/save", station.value).then((response) => {
+      loading.value = true;
+      station.value.page = 1
+      station.value.size = 50
+      axios.post("/total/queryByCondition", station.value).then((response) => {
         let data = response.data;
+        // console.log('查询的',data)
         if (data.success) {
-          notification.success({description: "保存成功！"});
+          notification.success({description: "查询成功！"});
+          stations.value = data.content.list;
           visible.value = false;
-          handleQuery({
-            page: pagination.value.current,
-            size: pagination.value.pageSize
-          });
+          loading.value = false;
+          pagination.value.current = 1;
+          pagination.value.total = data.content.total;
+          // handleQuery({
+          //   page: pagination.value.current,
+          //   size: pagination.value.pageSize
+          // });
         } else {
           notification.error({description: data.message});
         }
       });
     };
+    // const handleOk = () => {
+    //   axios.post("/SKCM/queryByCondition", station.value).then((response) => {
+    //     let data = response.data;
+    //     if (data.success) {
+    //       notification.success({description: "保存成功！"});
+    //       visible.value = false;
+    //       handleQuery({
+    //         page: pagination.value.current,
+    //         size: pagination.value.pageSize
+    //       });
+    //     } else {
+    //       notification.error({description: data.message});
+    //     }
+    //   });
+    // };
 
     const handleQuery = (param) => {
       if (!param) {
@@ -269,7 +310,7 @@ export default defineComponent({
         };
       }
       loading.value = true;
-      axios.get("/UVM/queryByCancer", {
+      axios.get("/total/queryByCancer", {
         params: {
           page: param.page,
           size: param.size
@@ -280,7 +321,7 @@ export default defineComponent({
         let data = response.data;
         if (data.success) {
           stations.value = data.content.list;
-          console.log(data.content.list)
+          // console.log(data.content.list)
           // 设置分页控件的值
           pagination.value.current = param.page;
           pagination.value.total = data.content.total;
@@ -322,3 +363,8 @@ export default defineComponent({
   },
 });
 </script>
+<style>
+  .div2{
+    font-size: 18px;
+  }
+</style>

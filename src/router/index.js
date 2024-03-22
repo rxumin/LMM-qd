@@ -19,6 +19,10 @@ const routes = [
       component: () => import('../views/main/all.vue'),
     },
     {
+      path: 'fxgj',
+      component: () => import('../views/main/fxgj.vue'),
+    },
+    {
       path: 'syyz',
       component:() => import('../views/main/syyz/test.vue')
     },
